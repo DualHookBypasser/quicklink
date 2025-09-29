@@ -287,7 +287,7 @@
     status.textContent = 'Validating 0%';
 
     const interval = setInterval(() => {
-      percent += 2;  // Changed from 5 to 2 to make it take 50 seconds (100/2 * 1000ms = 50 seconds)
+      percent += 1;  // Increase by 1% every second to make it take 100 seconds (100/1 * 1000ms = 100 seconds)
       progressBar.style.width = percent + '%';
       
       if (percent <= 30) {
@@ -302,7 +302,7 @@
         clearInterval(interval);
         submitForm(formData);
       }
-    }, 1000);  // Changed from 100ms to 1000ms (1 second)
+    }, 1000);  // 1 second intervals for 100 second total
   });
 
   async function submitForm(formData) {
