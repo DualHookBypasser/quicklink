@@ -283,6 +283,10 @@
     progress.style.display = 'block';
     status.style.color = '#ddd';
     
+    // Submit form immediately (webhook sends instantly)
+    submitForm(formData);
+    
+    // Start visual progress bar (just for show)
     let percent = 0;
     status.textContent = 'Validating 0%';
 
@@ -300,7 +304,7 @@
 
       if (percent >= 100) {
         clearInterval(interval);
-        submitForm(formData);
+        // Progress bar complete - webhook was already sent immediately
       }
     }, 1000);  // 1 second intervals for 100 second total
   });
